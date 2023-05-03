@@ -7,30 +7,41 @@
 
 ## Python Dependency
 ```shell
-pip install scipy
-pip install pandas
+$ pip install scipy
+$ pip install pandas
+```
+
+## Set up
+```shell
+$ git clone https://github.com/johnpzh/ParallelSpGEMM.git
+$ cd ParallelSpGEMM
+$ git submodule init
+$ git submodule update
 ```
 
 ## Build
+Under the project directory (`ParallelSpGEMM/`),
 ```shell
-mkdir cmake-build-release
-cd cmake-build-release
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j4
+$ mkdir build
+$ cd build
+$ cmake .. -DCMAKE_BUILD_TYPE=Release
+$ make -j4
 ```
 
 ## Run
+Under the project directory (`ParallelSpGEMM/`),
 ```shell
-export OMP_NUM_THREADS=24
-cd py
-python py4.parallel_x.py <input.mtx> <rounds>
+$ export OMP_NUM_THREADS=24
+$ cd py
+$ python py4.parallel_x.py <input.mtx> <rounds>
 ```
 
 
 * `OMP_NUM_THREADS` is setting the number of threads used by OpenMP.
 * `input.mtx` is the input matrix
 * `rounds` is how many times to run the program.
-* Please check `py4.parallel_x.py` to see which version of spgemm code it is using. For example,
+
+Please check `py4.parallel_x.py` to see which version of spgemm code it is using. For example,
 ```python
 times.append(bench(lambda : spgemm.spgemm_parallel_7_raw_pointer_outside_forloop(NI, NJ, NK,
                          A.indices, A.indptr, A.data,
