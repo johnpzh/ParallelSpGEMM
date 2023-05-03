@@ -14,14 +14,17 @@ import spgemm
 def test_one_input(mtx_file, times, rounds=10):
     A = spio.mmread(mtx_file).tocsr()
     B = A
-    # C = A @ B
+    C = A @ B
     NI, NJ = A.shape
     NJ, NK = B.shape
 
+    C_copy = C.copy()
+
     print(F"\n#### mtx: {os.path.basename(mtx_file)} ####")
-    times.append(bench(lambda : spgemm.spgemm_parallel_1(NI, NJ, NK,
-                             A.indices, A.indptr, A.data,
-                             B.indices, B.indptr, B.data),
+    times.append(bench(lambda : spgemm.spgemm_serial_hashmap(NI, NJ, NK,
+                                                              A.indices, A.indptr, A.data,
+                                                              B.indices, B.indptr, B.data,
+                                                              C_copy.indices, C_copy.indptr, C_copy.data),
                        repeat=rounds))
 
 
@@ -56,13 +59,13 @@ if __name__ == '__main__':
     pd.set_option('display.width', 400)
     pd.set_option('display.max_columns', None)
 
-    num_threads = os.environ["OMP_NUM_THREADS"]
+    # num_threads = os.environ["OMP_NUM_THREADS"]
 
     columns = {
         'matrix': matrices,
         'avg_time': times,
         'command': [sys.argv[0]] * len(matrices),
-        'threads': [num_threads] * len(matrices)
+        # 'threads': [num_threads] * len(matrices)
     }
     print(pd.DataFrame(data=columns))
 

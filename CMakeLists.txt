@@ -19,8 +19,23 @@ pybind11_add_module(add_test
 find_package(OpenMP REQUIRED)
 
 pybind11_add_module(spgemm
-        src/spgemm.cpp)
+        src/spgemm.module.cpp
+        src/spgemm_parallel_1.cpp
+        src/spgemm_parallel_2_hashmap.cpp
+        src/spgemm_parallel_3_memset.cpp
+        src/spgemm_parallel_4_raw_pointer.cpp
+        src/spgemm_parallel_5_matrix.cpp
+        src/spgemm_parallel_6_matrix_better_reset.cpp
+        src/spgemm_parallel_7_raw_pointer_outside_forloop.cpp
+        src/spgemm_serial_no_prealloc.cpp
+        src/spgemm_serial_prealloc.cpp
+        src/spgemm_serial_hashmap.cpp
+        )
 target_link_libraries(spgemm PRIVATE OpenMP::OpenMP_CXX)
+
+message ( STATUS "CMAKE build type:          " ${CMAKE_BUILD_TYPE} )
+message ( STATUS "CMAKE source directory:    " ${CMAKE_SOURCE_DIR} )
+message ( STATUS "CMAKE build directory:     " ${CMAKE_BINARY_DIR} )
 
 #add_library(spgemm
 #        MODULE

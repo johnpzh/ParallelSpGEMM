@@ -19,7 +19,11 @@ def test_one_input(mtx_file, times, rounds=10):
     NJ, NK = B.shape
 
     print(F"\n#### mtx: {os.path.basename(mtx_file)} ####")
-    times.append(bench(lambda : spgemm.spgemm_parallel_1(NI, NJ, NK,
+    # times.append(bench(lambda : spgemm.spgemm_parallel_1(NI, NJ, NK,
+    #                          A.indices, A.indptr, A.data,
+    #                          B.indices, B.indptr, B.data),
+    #                    repeat=rounds))
+    times.append(bench(lambda : spgemm.spgemm_parallel_2_hashmap(NI, NJ, NK,
                              A.indices, A.indptr, A.data,
                              B.indices, B.indptr, B.data),
                        repeat=rounds))
@@ -27,29 +31,30 @@ def test_one_input(mtx_file, times, rounds=10):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print(F"Usage: python {sys.argv[0]} <data_directory> <rounds>")
+        print(F"Usage: python {sys.argv[0]} <input.mtx> <rounds>")
         exit(-1)
-    data_dir = sys.argv[1]
+    # data_dir = sys.argv[1]
+    mtx_file = sys.argv[1]
     rounds = int(sys.argv[2])
 
-    matrices = [
-        "bcsstk17",
-        "pdb1HYS",
-        "rma10",
-        "cant",
-        "consph",
-        "shipsec1",
-        "cop20k_A",
-        "scircuit",
-    ]
+    # matrices = [
+    #     "bcsstk17",
+    #     "pdb1HYS",
+    #     "rma10",
+    #     "cant",
+    #     "consph",
+    #     "shipsec1",
+    #     "cop20k_A",
+    #     "scircuit",
+    # ]
 
-    # matrices = [ "bcsstk17" ]
+    # matrices = [ "sci" ]
     # matrices = [ "test_rank2" ]
 
     # mtx_file = sys.argv[1]
     times =[]
-    for mtx in matrices:
-        test_one_input(mtx_file=F"{data_dir}/{mtx}/{mtx}.mtx", times=times, rounds=rounds)
+    # for mtx in matrices:
+    test_one_input(mtx_file=mtx_file, times=times, rounds=rounds)
 
     code = []
 
@@ -59,10 +64,11 @@ if __name__ == '__main__':
     num_threads = os.environ["OMP_NUM_THREADS"]
 
     columns = {
-        'matrix': matrices,
+        'matrix': [os.path.basename(mtx_file)],
         'avg_time': times,
-        'command': [sys.argv[0]] * len(matrices),
-        'threads': [num_threads] * len(matrices)
+        'command': [sys.argv[0]],
+        'threads': [num_threads]
     }
     print(pd.DataFrame(data=columns))
+
 

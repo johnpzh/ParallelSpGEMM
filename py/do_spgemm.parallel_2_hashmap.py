@@ -19,7 +19,7 @@ def test_one_input(mtx_file, times, rounds=10):
     NJ, NK = B.shape
 
     print(F"\n#### mtx: {os.path.basename(mtx_file)} ####")
-    times.append(bench(lambda : spgemm.spgemm_parallel_1(NI, NJ, NK,
+    times.append(bench(lambda : spgemm.spgemm_parallel_2_hashmap(NI, NJ, NK,
                              A.indices, A.indptr, A.data,
                              B.indices, B.indptr, B.data),
                        repeat=rounds))

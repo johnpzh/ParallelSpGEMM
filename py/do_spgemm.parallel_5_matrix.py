@@ -11,7 +11,7 @@ sys.path.append("../build")
 import spgemm
 
 
-def test_one_input(mtx_file, times, rounds=10):
+def test_one_input(mtx_file, times, rounds=10, num_threads=1):
     A = spio.mmread(mtx_file).tocsr()
     B = A
     # C = A @ B
@@ -19,9 +19,10 @@ def test_one_input(mtx_file, times, rounds=10):
     NJ, NK = B.shape
 
     print(F"\n#### mtx: {os.path.basename(mtx_file)} ####")
-    times.append(bench(lambda : spgemm.spgemm_parallel_1(NI, NJ, NK,
+    times.append(bench(lambda : spgemm.spgemm_parallel_5_matrix(NI, NJ, NK,
                              A.indices, A.indptr, A.data,
-                             B.indices, B.indptr, B.data),
+                             B.indices, B.indptr, B.data,
+                             num_threads),
                        repeat=rounds))
 
 
@@ -31,6 +32,7 @@ if __name__ == '__main__':
         exit(-1)
     data_dir = sys.argv[1]
     rounds = int(sys.argv[2])
+    num_threads = int(os.environ["OMP_NUM_THREADS"])
 
     matrices = [
         "bcsstk17",
@@ -49,14 +51,12 @@ if __name__ == '__main__':
     # mtx_file = sys.argv[1]
     times =[]
     for mtx in matrices:
-        test_one_input(mtx_file=F"{data_dir}/{mtx}/{mtx}.mtx", times=times, rounds=rounds)
+        test_one_input(mtx_file=F"{data_dir}/{mtx}/{mtx}.mtx", times=times, rounds=rounds, num_threads=num_threads)
 
     code = []
 
     pd.set_option('display.width', 400)
     pd.set_option('display.max_columns', None)
-
-    num_threads = os.environ["OMP_NUM_THREADS"]
 
     columns = {
         'matrix': matrices,

@@ -43,13 +43,14 @@ def bench_0(fn, iter_time=1, clear_cache=False):
 
 
 def bench(fn, repeat=10, clear_cache=False):
-    try:
-        fn()
-    except np.core._exceptions._ArrayMemoryError as e:
-        logging.info("Numpy runs out of memory")
-        return np.inf
-    except Exception as e:
-        raise e
+    if repeat > 1:
+        try:
+            fn()
+        except np.core._exceptions._ArrayMemoryError as e:
+            logging.info("Numpy runs out of memory")
+            return np.inf
+        except Exception as e:
+            raise e
 
     times = []
     for _ in range(repeat):
