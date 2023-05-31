@@ -20,10 +20,14 @@ def test_one_input(mtx_file, times, rounds=10, num_threads=1):
 
 
     print(F"\n#### mtx: {os.path.basename(mtx_file)} ####")
-    times.append(bench(lambda : spgemm.spgemm_parallel_7_raw_pointer_outside_forloop(NI, NJ, NK,
+    times.append(bench(lambda : spgemm.spgemm_parallel_8_GraphBLAS_Gustavson(NI, NJ, NK,
                              A.indices, A.indptr, A.data,
                              B.indices, B.indptr, B.data),
                        repeat=rounds))
+    # times.append(bench(lambda : spgemm.spgemm_parallel_7_raw_pointer_outside_forloop(NI, NJ, NK,
+    #                          A.indices, A.indptr, A.data,
+    #                          B.indices, B.indptr, B.data),
+    #                    repeat=rounds))
     # times.append(bench(lambda : spgemm.spgemm_parallel_6_matrix_better_reset(NI, NJ, NK,
     #                          A.indices, A.indptr, A.data,
     #                          B.indices, B.indptr, B.data,

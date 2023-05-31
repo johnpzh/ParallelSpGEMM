@@ -27,6 +27,7 @@ pybind11_add_module(spgemm
         src/spgemm_parallel_5_matrix.cpp
         src/spgemm_parallel_6_matrix_better_reset.cpp
         src/spgemm_parallel_7_raw_pointer_outside_forloop.cpp
+        src/spgemm_parallel_8_GraphBLAS_Gustavson.cpp
         src/spgemm_serial_no_prealloc.cpp
         src/spgemm_serial_prealloc.cpp
         src/spgemm_serial_hashmap.cpp

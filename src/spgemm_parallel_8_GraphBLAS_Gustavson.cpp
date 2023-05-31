@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <omp.h>
-#include "../include/spgemm_parallel_7_raw_pointer_outside_forloop.h"
+#include "../include/spgemm_parallel_8_GraphBLAS_Gustavson.h"
 
 namespace py = pybind11;
 
@@ -24,21 +24,17 @@ static void symbolic_phase(
   /// Every row of A
 
 #pragma omp parallel // NOLINT(openmp-use-default-none)
-{
-  int8_t *ws_bitmap = (int8_t *) malloc(NK * sizeof(int8_t));
-  memset(ws_bitmap, 0, NK * sizeof(int8_t));
+  {
+//  int8_t *ws_bitmap = (int8_t *) malloc(NK * sizeof(int8_t));
+//  memset(ws_bitmap, 0, NK * sizeof(int8_t));
+  int64_t *mark_array = (int64_t *) malloc(NK * sizeof(int64_t));
+  int64_t mark = 0;
+  memset(mark_array, 0, NK * sizeof(int64_t));
 
 //#pragma omp parallel for default(shared) // NOLINT(openmp-use-default-none)
 #pragma omp for
   for (int64_t a_i_id = 0; a_i_id < NI; ++a_i_id) {
-    /// Set up workspace
-//    std::vector<int8_t> ws_bitmap(NK, 0);
-//    std::vector<int8_t> ws_bitmap(NK);
-//    memset(ws_bitmap.data(), 0, sizeof(int8_t) * NK);
-
-//    int8_t *ws_bitmap = (int8_t *) malloc(NK * sizeof(int8_t));
-//    memset(ws_bitmap, 0, NK * sizeof(int8_t));
-
+    mark += 2;
     int64_t ws_col_list_size = 0;
 
     int64_t a_i_start = A_rowptr[a_i_id];
@@ -46,19 +42,32 @@ static void symbolic_phase(
 
     /// Linear combination
     for (int64_t a_i = a_i_start; a_i < a_i_bound; ++a_i) {
+//      {//test
+//        printf("a_i:%ld, mark:%ld", a_i, mark);
+//        for (int64_t m_i = 0; m_i < NK; ++m_i) {
+//          printf(" [%ld]:%ld", m_i, mark_array[m_i]);
+//        }
+//        printf("\n");
+//      }
       int64_t a_j_id = A_col[a_i];
-      double a_val = A_data[a_i];
+//      {/// test
+//        printf(" A_col[%ld]: %ld", a_i, a_j_id);
+//      }
+//      double a_val = A_data[a_i];
       int64_t b_i_start = B_rowptr[a_j_id];
       int64_t b_i_bound = B_rowptr[a_j_id + 1];
       for (int64_t b_i = b_i_start; b_i < b_i_bound; ++b_i) {
         int64_t b_k_id = B_col[b_i];
-        double b_val = B_data[b_i];
+//        {/// test
+//          printf(" B_col[%ld]: %ld", b_i, b_k_id);
+//        }
+//        double b_val = B_data[b_i];
 //        ws_data[b_k_id] += a_val * b_val;
 //          {//test
 //            printf("W[%lld, %lld] %lf\n", a_i_id, b_k_id, ws_data[b_k_id]);
 //          }
-        if (!ws_bitmap[b_k_id]) {
-          ws_bitmap[b_k_id] = 1;
+        if (mark_array[b_k_id] != mark) {
+          mark_array[b_k_id] = mark;
           ++ws_col_list_size;
 //          ws_col_list[ws_col_list_size++] = b_k_id;
 //            {//test
@@ -66,15 +75,21 @@ static void symbolic_phase(
 //            }
         }
       }
+
+//      {//test
+//        printf("\n");
+//      }
     }
 
     C_rowptr[a_i_id] = ws_col_list_size;
+//    {//test
+//      printf("C_rowptr[%ld]: %ld\n", a_i_id, C_rowptr[a_i_id]);
+//    }
 
-    memset(ws_bitmap, 0, NK * sizeof(int8_t));
   } /// End omp for
 
-  free(ws_bitmap);
-} /// End omp parallel
+  free(mark_array);
+  } /// End omp parallel
 
   /// Reduce C.rowptr after getting all row sizes
   int64_t sum = 0;
@@ -114,37 +129,22 @@ static void numeric_phase(
 #pragma omp parallel // NOLINT(openmp-use-default-none)
 {
   double *ws_data = (double *) malloc(NK * sizeof(double));
-  int64_t *ws_col_list = (int64_t *) malloc(NK * sizeof(int64_t));
-  int8_t *ws_bitmap = (int8_t *) malloc(NK * sizeof(int8_t));
+  int64_t *mark_array = (int64_t *) malloc(NK * sizeof(int64_t));
+  memset(mark_array, 0, NK * sizeof(int64_t));
+  int64_t mark = 0;
+//  int64_t *ws_col_list = (int64_t *) malloc(NK * sizeof(int64_t));
+//  int8_t *ws_bitmap = (int8_t *) malloc(NK * sizeof(int8_t));
 
-  memset(ws_data, 0, NK * sizeof(double));
-  memset(ws_bitmap, 0, NK * sizeof(int8_t));
+//  memset(ws_data, 0, NK * sizeof(double));
+//  memset(ws_bitmap, 0, NK * sizeof(int8_t));
 
 //#pragma omp parallel for default(shared) // NOLINT(openmp-use-default-none)
 #pragma omp for
   for (int64_t a_i_id = 0; a_i_id < NI; ++a_i_id) {
-    /// Set up workspace
-//    std::vector<double> ws_data(NK, 0.0);
-//    std::vector<int64_t> ws_col_list(NK);
-//    std::vector<int8_t> ws_bitmap(NK, 0);
-
-//    std::vector<double> ws_data(NK);
-//    std::vector<int64_t> ws_col_list(NK);
-//    std::vector<int8_t> ws_bitmap(NK);
-//
-//    memset(ws_data.data(), 0, sizeof(double) * NK);
-//    memset(ws_bitmap.data(), 0, sizeof(int8_t) * NK);
-
-//    double *ws_data = (double *) malloc(NK * sizeof(double));
-//    int64_t *ws_col_list = (int64_t *) malloc(NK * sizeof(int64_t));
-//    int8_t *ws_bitmap = (int8_t *) malloc(NK * sizeof(int8_t));
-//
-//    memset(ws_data, 0, NK * sizeof(double));
-////    memset(ws_col_list, 0, NK * sizeof(int64_t));
-//    memset(ws_bitmap, 0, NK * sizeof(int8_t));
-
-
+    mark += 2;
     int64_t ws_col_list_size = 0;
+    int64_t rowptr_start = C_rowptr[a_i_id];
+    int64_t rowptr = rowptr_start;
 
     int64_t a_i_start = A_rowptr[a_i_id];
     int64_t a_i_bound = A_rowptr[a_i_id + 1];
@@ -158,55 +158,43 @@ static void numeric_phase(
       for (int64_t b_i = b_i_start; b_i < b_i_bound; ++b_i) {
         int64_t b_k_id = B_col[b_i];
         double b_val = B_data[b_i];
-        ws_data[b_k_id] += a_val * b_val;
 //          {//test
 //            printf("W[%lld, %lld] %lf\n", a_i_id, b_k_id, ws_data[b_k_id]);
 //          }
-        if (!ws_bitmap[b_k_id]) {
-          ws_bitmap[b_k_id] = 1;
-          ws_col_list[ws_col_list_size++] = b_k_id;
+        if (mark_array[b_k_id] != mark) {
+          mark_array[b_k_id] = mark;
+//          ws_col_list[ws_col_list_size++] = b_k_id;
+          C_col[rowptr++] = b_k_id;
+          ws_data[b_k_id] = a_val * b_val;
 //            {//test
 //              printf("ws_col_list[%lld] %lld\n", ws_col_list_size - 1, ws_col_list[ws_col_list_size - 1]);
 //            }
+        } else {
+          ws_data[b_k_id] += a_val * b_val;
         }
       }
     }
 
-//    C_rowptr[a_i_id] = ws_col_list_size;
-
     /// Sort the column IDs
-//    std::sort(ws_col_list.begin(), ws_col_list.begin() + ws_col_list_size);
-    std::sort(ws_col_list, ws_col_list + ws_col_list_size);
+//    std::sort(C_col + rowptr_start, C_col + rowptr);
 
     /// Store results from the workspace to the C's row
-    int64_t c_index = C_rowptr[a_i_id];
-    for (int64_t ws_i = 0; ws_i < ws_col_list_size; ++ws_i) {
-      int64_t c_k_id = ws_col_list[ws_i];
-//        {//test
-//          printf("After_ws_col_list[%lld] %lld\n", ws_i, ws_col_list[ws_i]);
-//        }
-      double c_val = ws_data[c_k_id];
-      C_col[c_index] = c_k_id;
-      C_data[c_index] = c_val;
+    for (int64_t ptr = rowptr_start; ptr < rowptr; ++ptr) {
+      int64_t c_col_id = C_col[ptr];
 
-      ws_bitmap[c_k_id] = 0;
-      ws_data[c_k_id] = 0.0;
-//        {//test
-//          printf("C[%lld, %lld] %lf\n", a_i_id, c_k_id, C_data[c_index]);
-//        }
-      ++c_index;
+      double data = ws_data[c_col_id];
+      C_data[ptr] = data;
     }
   } /// End omp for
 
   free(ws_data);
-  free(ws_col_list);
-  free(ws_bitmap);
+  free(mark_array);
 }/// End omp parallel
 }
 
 
 /// C[i,k] = A[i,j] * B[j,k]
-void spgemm_parallel_7_raw_pointer_outside_forloop(
+void spgemm_parallel_8_GraphBLAS_Gustavson(
     int64_t NI,
     int64_t NJ,
     int64_t NK,
@@ -248,7 +236,7 @@ void spgemm_parallel_7_raw_pointer_outside_forloop(
 
 //  {// test
 //    for (int64_t p_i = 0; p_i < NI + 1; ++p_i) {
-//      printf("%lld ", C_rowptr[p_i]);
+//      printf("%ld ", C_rowptr[p_i]);
 //    }
 //    printf("\n");
 //  }

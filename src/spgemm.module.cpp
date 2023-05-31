@@ -9,6 +9,7 @@
 #include "../include/spgemm_parallel_5_matrix.h"
 #include "../include/spgemm_parallel_6_matrix_better_reset.h"
 #include "../include/spgemm_parallel_7_raw_pointer_outside_forloop.h"
+#include "../include/spgemm_parallel_8_GraphBLAS_Gustavson.h"
 #include "../include/spgemm_serial_no_prealloc.h"
 #include "../include/spgemm_serial_prealloc.h"
 #include "../include/spgemm_serial_hashmap.h"
@@ -27,6 +28,7 @@ PYBIND11_MODULE(spgemm, m) {
   m.def("spgemm_parallel_5_matrix", &spgemm_parallel_5_matrix, "parallel spgemm C = A * B, put the data structure outside the for-loop");
   m.def("spgemm_parallel_6_matrix_better_reset", &spgemm_parallel_6_matrix_better_reset, "parallel spgemm C = A * B, put the data structure outside the for-loop");
   m.def("spgemm_parallel_7_raw_pointer_outside_forloop", &spgemm_parallel_7_raw_pointer_outside_forloop, "parallel spgemm C = A * B, private vectors but outside for-loop");
+  m.def("spgemm_parallel_8_GraphBLAS_Gustavson", &spgemm_parallel_8_GraphBLAS_Gustavson, "parallel spgemm C = A * B, GraphBLAS Gustavson\'s Algorithm");
   m.def("spgemm_serial_no_prealloc", &spgemm_serial_prealloc, "serial spgemm C = A * B, assuming C is pre-allocated");
   m.def("spgemm_serial_prealloc", &spgemm_serial_prealloc, "serial spgemm C = A * B, assuming C is pre-allocated");
   m.def("spgemm_serial_hashmap", &spgemm_serial_hashmap, "serial spgemm C = A * B, assuming C is pre-allocated");
